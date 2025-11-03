@@ -1,0 +1,22 @@
+body {
+  font-family: 'Roboto Mono', monospace;
+}
+
+.site-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.6rem;
+  color: #000;
+}
+
+.nav-link {
+  font-family: 'Roboto Mono', monospace;
+  transition: color 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  color: #007bff !important;
+}
+
+header {
+  border-bottom: 1px solid #ddd;
+}
