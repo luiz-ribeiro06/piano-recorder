@@ -1,10 +1,15 @@
 require("dotenv").config();
 const express = require("express");
-const run = require("./config/db")
+const run = require("./config/db");
 const cors = require("cors");
-require("dotenv").config();
+
+var indexRouter = require("./routes/index");
+var recordingsRouter = require("./routes/recordings");
+var settingsRouter = require("./routes/settings");
+var aboutRouter = require("./routes/about");
 
 const app = express();
+
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
@@ -15,12 +20,11 @@ app.set('views', __dirname + '/views');
 
 app.use(express.static("public"));
 
+app.use("/", indexRouter);
+app.use("/recordings", recordingsRouter);
+app.use("/settings", settingsRouter);
+app.use("/about", aboutRouter);
+
 run().catch(console.dir);
 
-app.get("/", (req, res) => {
-  res.render("index", { 
-    title: "Piano Recorder"
-  });
-});
-
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}.`));
