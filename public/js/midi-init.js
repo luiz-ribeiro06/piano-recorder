@@ -1,30 +1,52 @@
-console.log("Iniciando WebMidi...");
+(function() {
+  // Checa se Web MIDI API é suportado
+  if (!navigator.requestMIDIAccess) {
+    console.error("Web MIDI API não suportado neste navegador.");
+    return;
+  }
 
-if (!window.WebMidi) {
-    console.error("WebMidi.js não está disponível. Verifique o carregamento do script.");
-} else {
-    WebMidi.enable()
-        .then(() => {
-            console.log("WebMidi habilitado.");
-            console.log("Entradas detectadas:", WebMidi.inputs);
+  // Tenta acessar dispositivos MIDI
+  navigator.requestMIDIAccess()
+    .then(onMIDISuccess, onMIDIFailure);
 
-            if (WebMidi.inputs.length === 0) {
-                console.warn("Nenhum dispositivo MIDI encontrado.");
-                return;
-            }
+  function onMIDISuccess(midiAccess) {
+    console.log("MIDI ligado:", midiAccess);
 
-            const piano = WebMidi.inputs[0];  
-            console.log("Conectado ao dispositivo:", piano.name);
+    // Pra cada entrada MIDI disponível
+    for (let input of midiAccess.inputs.values()) {
+      input.onmidimessage = handleMIDIMessage;
+      console.log("Escutando MIDI em:", input.name);
+    }
 
-            piano.addListener("noteon", (e) => {
-                console.log(`Nota ON: ${e.note.name}${e.note.octave} Velocidade: ${e.velocity}`);
-            });
+    midiAccess.onstatechange = (e) => {
+      console.log("MIDI state change:", e.port.name, e.port.state);
+    };
+  }
 
-            piano.addListener("noteoff", (e) => {
-                console.log(`Nota OFF: ${e.note.name}${e.note.octave}`);
-            });
-        })
-        .catch(err => {
-            console.error("Erro ao habilitar WebMidi:", err);
-        });
-}
+  function onMIDIFailure(err) {
+    console.error("Falha ao acessar MIDI:", err);
+  }
+
+  // Lida com eventos de mensagem MIDI
+  function handleMIDIMessage(event) {
+    const [status, note, velocity] = event.data;
+
+    // NOTE ON
+    if (status === 144 && velocity > 0) {
+      console.log("Nota ON:", note, "vel:", velocity);
+
+      document.dispatchEvent(new CustomEvent("midi:note", {
+        detail: { type: "noteon", noteNumber: note }
+      }));
+    }
+
+    // NOTE OFF
+    if (status === 128 || (status === 144 && velocity === 0)) {
+      console.log("Nota OFF:", note);
+
+      document.dispatchEvent(new CustomEvent("midi:note", {
+        detail: { type: "noteoff", noteNumber: note }
+      }));
+    }
+  }
+})();
