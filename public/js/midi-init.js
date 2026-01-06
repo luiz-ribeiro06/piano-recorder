@@ -1,18 +1,15 @@
 (function() {
-  // Checa se Web MIDI API é suportado
   if (!navigator.requestMIDIAccess) {
     console.error("Web MIDI API não suportado neste navegador.");
     return;
   }
 
-  // Tenta acessar dispositivos MIDI
   navigator.requestMIDIAccess()
     .then(onMIDISuccess, onMIDIFailure);
 
   function onMIDISuccess(midiAccess) {
     console.log("MIDI ligado:", midiAccess);
 
-    // Pra cada entrada MIDI disponível
     for (let input of midiAccess.inputs.values()) {
       input.onmidimessage = handleMIDIMessage;
       console.log("Escutando MIDI em:", input.name);
@@ -27,12 +24,10 @@
     console.error("Falha ao acessar MIDI:", err);
   }
 
-  // Lida com eventos de mensagem MIDI
   function handleMIDIMessage(event) {
     const [status, note, velocity] = event.data;
 
-    // NOTE ON
-    if (status === 144 && velocity > 0) {
+    if (status === 0x90 && velocity > 0) {
       console.log("Nota ON:", note, "vel:", velocity);
 
       document.dispatchEvent(new CustomEvent("midi:note", {
@@ -40,8 +35,7 @@
       }));
     }
 
-    // NOTE OFF
-    if (status === 128 || (status === 144 && velocity === 0)) {
+    if (status === 0x80 || (status === 0x90 && velocity === 0)) {
       console.log("Nota OFF:", note);
 
       document.dispatchEvent(new CustomEvent("midi:note", {

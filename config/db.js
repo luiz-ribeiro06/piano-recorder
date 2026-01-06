@@ -1,21 +1,13 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const mongoose = require('mongoose');
 
-const client = new MongoClient(process.env.MONGO_URI, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
-
-async function run() {
+const run = async () => {
   try {
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log("Conectado ao MongoDB.");
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("Connected to MongoDB via Mongoose");
   } catch (error) {
-    console.error("Erro ao conectar ao MongoDB:", error);
+    console.error("MongoDB connection error:", error);
+    process.exit(1);
   }
-}
+};
 
 module.exports = run;

@@ -21,20 +21,11 @@ header {
   border-bottom: 1px solid #ddd;
 }
 
-#piano-wrap {
-    /* 1. Largura Responsiva: Ocupa toda a largura do elemento pai (o container). */
-    width: 100%; 
-    
-    /* 2. Remoção do Scroll: Garante que, se o conteúdo exceder as dimensões (especialmente crucial se a largura do JS não for '100%'), as barras de rolagem não apareçam. */
-    overflow: hidden; 
-    
-    /* 3. Ajuste de Flexbox: Complementa as classes d-flex e justify-content-center do Bootstrap. */
-    display: flex;
-    justify-content: center; /* Garante que o piano gerado (se for menor que 100%) fique centralizado */
-    align-items: center; /* Centraliza verticalmente (se necessário) */
-
-    /* 4. Altura Mínima (Opcional): Se você quiser garantir um espaço mínimo mesmo antes do piano ser carregado. */
-    min-height: 150px; 
+/* destacar tecla pressionada */
+#piano-wrap li.active-key, 
+#piano-wrap li:hover {
+    background-color: #007bff !important;
+    cursor: pointer;
 }
 
 .footer {
