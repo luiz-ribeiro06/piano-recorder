@@ -1,43 +1,35 @@
 (function() {
-  if (!navigator.requestMIDIAccess) {
-    console.error("Web MIDI API não suportado neste navegador.");
-    return;
-  }
+  if (!navigator.requestMIDIAccess) return;
 
-  navigator.requestMIDIAccess()
-    .then(onMIDISuccess, onMIDIFailure);
+  navigator.requestMIDIAccess({ sysex: true })
+    .then(onMIDISuccess, () => console.error("Falha ao acessar MIDI."));
 
   function onMIDISuccess(midiAccess) {
-    console.log("MIDI ligado:", midiAccess);
-
-    for (let input of midiAccess.inputs.values()) {
-      input.onmidimessage = handleMIDIMessage;
-      console.log("Escutando MIDI em:", input.name);
-    }
-
-    midiAccess.onstatechange = (e) => {
-      console.log("MIDI state change:", e.port.name, e.port.state);
+    const startListening = () => {
+      for (let input of midiAccess.inputs.values()) {
+        input.removeEventListener('midimessage', handleMIDIMessage);
+        input.addEventListener('midimessage', handleMIDIMessage);
+      }
     };
-  }
 
-  function onMIDIFailure(err) {
-    console.error("Falha ao acessar MIDI:", err);
+    startListening();
+    midiAccess.onstatechange = (e) => {
+      if (e.port.state === 'connected') startListening();
+    };
   }
 
   function handleMIDIMessage(event) {
     const [status, note, velocity] = event.data;
 
-    if (status === 0x90 && velocity > 0) {
-      console.log("Nota ON:", note, "vel:", velocity);
+    if (status >= 0xf0) return;
 
+    const command = status & 0xf0;
+
+    if (command === 0x90 && velocity > 0) {
       document.dispatchEvent(new CustomEvent("midi:note", {
         detail: { type: "noteon", noteNumber: note }
       }));
-    }
-
-    if (status === 0x80 || (status === 0x90 && velocity === 0)) {
-      console.log("Nota OFF:", note);
-
+    } else if (command === 0x80 || (command === 0x90 && velocity === 0)) {
       document.dispatchEvent(new CustomEvent("midi:note", {
         detail: { type: "noteoff", noteNumber: note }
       }));

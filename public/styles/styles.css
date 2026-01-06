@@ -1,5 +1,9 @@
 body {
   font-family: 'Roboto Mono', monospace;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  line-height: 1.6;
 }
 
 .site-title {
@@ -11,6 +15,7 @@ body {
 .nav-link {
   font-family: 'Roboto Mono', monospace;
   transition: color 0.2s ease-in-out;
+  padding: 0.5rem 1rem;
 }
 
 .nav-link:hover {
@@ -26,6 +31,7 @@ header {
 #piano-wrap li:hover {
     background-color: #007bff !important;
     cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 .footer {
@@ -40,6 +46,7 @@ header {
 .footer a {
   color: #444;
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .footer a:hover {
@@ -48,4 +55,5 @@ header {
 
 #start-record, #stop-record {
   min-width: 150px;
+  transition: background-color 0.2s ease;
 }
