@@ -4,11 +4,9 @@ const recordingSchema = new mongoose.Schema({
     title: { 
         type: String, 
         required: true,
-        default: "New Recording"
     },
     artist: { 
-        type: String, 
-        default: ""
+        type: String,
     },
     date: { 
         type: Date, 

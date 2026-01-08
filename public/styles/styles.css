@@ -34,6 +34,16 @@ header {
     transition: background-color 0.2s ease;
 }
 
+#piano-wrap ul {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+#piano-wrap {
+    width: 100%;
+    display: block;
+}
+
 .footer {
   margin-top: 40px;
   padding: 20px 0;

@@ -4,10 +4,6 @@
     <h1>My Recordings</h1>
     <p>Here are your saved piano recordings. You can edit or delete them.</p>
 
-    <div id="piano-wrap" class="mt-4 d-flex justify-content-center"></div>
-
-    <button id="stop-playback" class="btn btn-secondary mb-3" style="display: none;">Stop Playback</button>
-
     <div class="row">
         <% recordings.forEach(recording => { %>
             <div class="col-md-4 mb-4">
@@ -18,7 +14,7 @@
                             <strong>Artist:</strong> <%= recording.artist || 'Unknown' %><br>
                             <strong>Date:</strong> <%= new Date(recording.date).toLocaleDateString() %>
                         </p>
-                        <button class="btn btn-primary btn-sm play-btn" data-id="<%= recording._id %>">Play</button>
+                        <button class="btn btn-primary btn-sm play-btn" data-id="<%= recording._id %>" data-title="<%= recording.title %>">Play</button>
                         <button class="btn btn-warning btn-sm edit-btn" data-id="<%= recording._id %>" data-title="<%= recording.title %>" data-artist="<%= recording.artist %>">Edit</button>
                         <button class="btn btn-danger btn-sm delete-btn" data-id="<%= recording._id %>">Delete</button>
                     </div>
@@ -27,7 +23,27 @@
         <% }); %>
     </div>
 
-    <!-- Editar gravação -->
+    <!-- Piano -->
+    <div class="modal fade" id="playbackModal" tabindex="-1" aria-labelledby="playbackModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="playbackModalLabel">Playing: <span id="playing-title"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="w-100 d-flex justify-content-center mt-4">
+                        <div id="piano-wrap"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close & Stop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editar gravação-->
     <div class="modal fade" id="editRecordingModal" tabindex="-1" aria-labelledby="editRecordingModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -63,6 +79,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const playbackModal = new bootstrap.Modal(document.getElementById('playbackModal'));
         const editModal = new bootstrap.Modal(document.getElementById('editRecordingModal'));
         let currentEditId = null;
         let playbackTimeouts = [];
@@ -70,17 +87,23 @@
         const stopPlayback = () => {
             playbackTimeouts.forEach(clearTimeout);
             playbackTimeouts = [];
-            document.getElementById('stop-playback').style.display = 'none';
             window.isPlayingBack = false;
-            document.dispatchEvent(new CustomEvent("midi:note", { detail: { type: 'noteoff', noteNumber: -1 } }));  // Placeholder para reset
+            
+            document.querySelectorAll('.active-key').forEach(key => {
+                key.classList.remove('active-key');
+            });
         };
 
-        document.getElementById('stop-playback').addEventListener('click', stopPlayback);
+        document.getElementById('playbackModal').addEventListener('hidden.bs.modal', stopPlayback);
 
         document.querySelectorAll('.play-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.dataset.id;
+                const title = e.target.dataset.title;
+                
                 stopPlayback();
+                document.getElementById('playing-title').innerText = title;
+                playbackModal.show();
 
                 try {
                     const response = await fetch(`/recordings/${id}/events`);
@@ -98,16 +121,15 @@
                         }, event.time);
                         playbackTimeouts.push(timeout);
                     });
-
-                    document.getElementById('stop-playback').style.display = 'block';
                 } catch (err) {
                     console.error('Error playing recording:', err);
                     alert('Error playing recording.');
-                    window.isPlayingBack = false;
+                    playbackModal.hide();
                 }
             });
         });
 
+        // Editar e deletar
         document.querySelectorAll('.edit-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 currentEditId = e.target.dataset.id;
@@ -120,46 +142,24 @@
         document.getElementById('save-edit-btn').addEventListener('click', async () => {
             const title = document.getElementById('edit-title').value.trim();
             const artist = document.getElementById('edit-artist').value.trim();
-            if (!title) {
-                alert('Title is required.');
-                return;
-            }
+            if (!title) return alert('Title is required.');
             try {
                 const response = await fetch(`/recordings/${currentEditId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title, artist })
                 });
-                if (response.ok) {
-                    alert('Recording updated!');
-                    location.reload();
-                } else {
-                    alert('Error updating recording.');
-                }
-            } catch (err) {
-                console.error('Network error:', err);
-            }
-            editModal.hide();
+                if (response.ok) location.reload();
+            } catch (err) { console.error(err); }
         });
 
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                if (confirm('Are you sure you want to delete this recording?')) {
+                if (confirm('Are you sure?')) {
                     fetch(`/recordings/${e.target.dataset.id}`, { method: 'DELETE' })
-                        .then(response => {
-                            if (response.ok) {
-                                alert('Recording deleted!');
-                                location.reload();
-                            } else {
-                                alert('Error deleting recording.');
-                            }
-                        })
-                        .catch(err => console.error('Network error:', err));
+                        .then(res => res.ok && location.reload());
                 }
             });
         });
     });
 </script>
-
-</body>
-</html>
